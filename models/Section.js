@@ -4,15 +4,22 @@ const sectionSchema = new mongoose.Schema({
   title: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
   },
-  subSection: [
+  course: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Course',
+  },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
+  subSections: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: 'SubSection'
-    }
-  ]
+      ref: 'SubSection',
+    },
+  ],
 });
 
 module.exports = mongoose.model('Section', sectionSchema);

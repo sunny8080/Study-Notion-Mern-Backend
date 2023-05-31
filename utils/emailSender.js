@@ -7,21 +7,22 @@ const emailSender = async (toEmail, subject, body) => {
       host: process.env.MAIL_HOST,
       auth: {
         user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS
-      }
-    })
+        pass: process.env.MAIL_PASS,
+      },
+    });
 
     // send mail
     const info = await transporter.sendMail({
       from: `${process.env.FROM_NAME} <${process.env.FROM_EMAIL}>`,
       to: toEmail,
       subject: subject,
-      html: `${body}`
+      html: `${body}`,
     });
 
     return info;
   } catch (err) {
     clgDev(err.message);
   }
-
 };
+
+module.exports = emailSender;

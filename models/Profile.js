@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const profileSchema = new mongoose.Schema({
   gender: {
     type: String,
+    enum:["Male", "Female", "Others"],
     default: null // TODO - check for null default
   },
   dob: {

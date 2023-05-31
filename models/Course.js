@@ -4,17 +4,17 @@ const courseSchema = new mongoose.Schema({
   title: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
   },
   description: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
   },
   whatYouWillLearn: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
   },
   instructor: {
     type: mongoose.Schema.Types.ObjectId,
@@ -23,47 +23,56 @@ const courseSchema = new mongoose.Schema({
   },
   price: {
     type: Number,
-    required: true
-  },
-  section: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Section'
-    }
-  ],
-  review: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Review'
-    }
-  ],
-  thumbnail: {
-    type: String,
-    required: true
+    required: true,
   },
   tags: {
     type: [String],
-    required: true
+    required: true,
+    trim: true,
+  },
+  thumbnail: {
+    type: String,
+    required: true,
   },
   category: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Category",
-    required: true
+    ref: 'Category',
+    required: true,
   },
+  averageRating: {
+    type: Number,
+    default: 0,
+  },
+  numberOfEnrolledStudents: {
+    type: Number,
+    default: 0,
+  },
+  sections: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Section',
+    },
+  ],
+  reviews: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Review',
+    },
+  ],
   studentsEnrolled: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
-      default: []
-    }
+      default: [],
+    },
   ],
   instructions: [String],
   status: {
     type: String,
-    enum: ["Draft", "Published"]
-  }
-
+    enum: ['Draft', 'Published'],
+    default: 'Draft',
+  },
 });
 
 module.exports = mongoose.model('Course', courseSchema);

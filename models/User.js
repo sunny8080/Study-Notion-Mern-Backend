@@ -1,80 +1,75 @@
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 
 const userSchema = new mongoose.Schema(
   {
     firstName: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
     lastName: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
     email: {
       type: String,
       required: true,
-      unique: true,
+      unique: [true, 'Enter a valid email'],
       trim: true,
-      match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, "Please add a valid email"],
+      match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please add a valid email'],
     },
     password: {
       type: String,
       required: true,
       minLength: 6,
-      select: false
+      select: false,
     },
     role: {
       type: String,
-      enum: ["Admin", "Student", "Instructor"],
-      required: true
+      enum: ['Admin', 'Student', 'Instructor'],
+      required: true,
     },
     avatar: {
       type: String,
-      required: true
+      required: true,
     },
     active: {
       type: Boolean,
-      default: true
+      default: true,
     },
     approved: {
       type: Boolean,
-      default: true
+      default: true,
     },
     profile: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Profile',
-      required: true
+      required: true,
     },
     courses: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Course',
-        default: [] // TODO - check for default
+        default: [], // TODO - check for default
       },
     ],
     courseProgress: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'CourseProgress'
-      }
+        ref: 'CourseProgress',
+      },
     ],
     reviews: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Review'
-      }
+        ref: 'Review',
+      },
     ],
-    isEmailConfirmed: {
-      type: Boolean,
-      default: false,
-    },
     token: String, // TODO - check if we can remove these 5 fields
     resetPasswordToken: String,
-    resetPasswordExpire: String,
-    confirmEmailToken: String,
-    confirmEmailExpire: Date,
+    resetPasswordExpire: Date,
   },
   { timestamps: true }
 );
