@@ -36,7 +36,7 @@ exports.getUser = async (req, res, next) => {
 };
 
 // @desc      Get current user
-// @route     GET /api/v1/users/currentUser
+// @route     GET /api/v1/users/currentuser
 // @access    Private
 exports.currentUser = async (req, res, next) => {
   try {
@@ -51,7 +51,7 @@ exports.currentUser = async (req, res, next) => {
 };
 
 // @desc      Change avatar of user
-// @route     GET /api/v1/users/changeAvatar
+// @route     PUT /api/v1/users/changeavatar
 // @access    Private
 exports.changeAvatar = async (req, res, next) => {
   try {
@@ -91,7 +91,7 @@ exports.changeAvatar = async (req, res, next) => {
 };
 
 // @desc      Get all enrolled courses of a student
-// @route     GET /api/v1/users/getEnrolledCourses
+// @route     GET /api/v1/users/getenrolledcourses
 // @access    Private/Student
 exports.getEnrolledCourses = async (req, res, next) => {
   try {
@@ -108,7 +108,7 @@ exports.getEnrolledCourses = async (req, res, next) => {
 };
 
 // @desc      Get all courses created by current instructor
-// @route     GET /api/v1/users/getCreatedCourses
+// @route     GET /api/v1/users/getcreatedcourses
 // @access    Private/Instructor
 exports.getCreatedCourses = async (req, res, next) => {
   try {
@@ -125,7 +125,7 @@ exports.getCreatedCourses = async (req, res, next) => {
 };
 
 // @desc      Get all review by a student
-// @route     GET /api/v1/users/getAllReviews
+// @route     GET /api/v1/users/getallreviews
 // @access    Private/Student
 exports.getAllReviews = async (req, res, next) => {
   try {
@@ -143,9 +143,9 @@ exports.getAllReviews = async (req, res, next) => {
 
 // TODO
 // @desc      Delete current user
-// @route     GET /api/v1/users/deleteCurrentUser
-// @access    Private
-exports.deleteUser = async (req, res, next) => {
+// @route     DELETE /api/v1/users/deletecurrentuser
+// @access    Private /Student+Instructor
+exports.deleteCurrentUser = async (req, res, next) => {
   try {
     // TODO - Do it by job scheduling
     // const job = schedule.scheduleJob("10 * * * * *", function () {

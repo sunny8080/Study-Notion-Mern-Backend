@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 const razorpayInstance = require('../config/razorpay');
 const cryptos = require('crypto');
 
-// TODO - All payments related routes are not sure, it will done in later time
+// TODO - All payments related routes, controllers are not sure, it will done in later time
 
 // @desc      Capture the payment and create the Razorpay order
 // @route     POST /api/v1/payments/capturePayment

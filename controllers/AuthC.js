@@ -71,6 +71,11 @@ exports.signup = async (req, res, next) => {
       return next(new ErrorResponse('OTP is not valid. Please try again.', 400));
     }
 
+    // check if role is not admin
+    if (role === 'Admin') {
+      return next(new ErrorResponse('User not authorized', 403));
+    }
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -124,7 +129,7 @@ exports.login = async (req, res, next) => {
 };
 
 // @desc      Logout current user / cleat cookie
-// @route     GET /api/v1/auth/logout
+// @route     POST /api/v1/auth/logout
 // @access    Private
 exports.logOut = async (req, res, next) => {
   try {
@@ -288,6 +293,21 @@ exports.resetPassword = async (req, res, next) => {
     sendTokenResponse(res, user, 200);
   } catch (err) {
     next(new ErrorResponse('Failed to reset password. Please try again', 500));
+  }
+};
+
+// TODO
+// @desc      Create Admin
+// @route     POST /api/v1/auth/createadmin
+// @access    Private/SiteOwner
+exports.createAdmin = async (req, res, next) => {
+  try {
+    res.status(400).json({
+      success: false,
+      error: 'sadf',
+    });
+  } catch (err) {
+    next(new ErrorResponse('Failed to create admin, Please try again', 500));
   }
 };
 

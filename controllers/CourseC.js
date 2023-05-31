@@ -58,6 +58,35 @@ exports.getCourse = async (req, res, next) => {
   }
 };
 
+// @desc      Get all reviews of a course
+// @route     GET /api/v1/courses/:courseId/reviews
+// @access    Public
+exports.getReviewsOfCourse = async (req, res, next) => {
+  try {
+    const course = await Course.findById(req.params.courseId)
+      .populate({
+        path: 'reviews', // TODO - verify
+        populate: {
+          path: 'user',
+          select: 'firstName lastName email avatar',
+        },
+      })
+      .populate('course');
+
+    if (!course) {
+      return next(new ErrorResponse('No such course found', 404));
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: course.reviews.length,
+      data: course.reviews,
+    });
+  } catch (err) {
+    next(new ErrorResponse('Failed to fetching Reviews. Please try again'));
+  }
+};
+
 // @desc      Create Course
 // @route     POST /api/v1/courses
 // @access    Private/instructor

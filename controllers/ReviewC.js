@@ -30,30 +30,10 @@ exports.getAllReviews = async (req, res, next) => {
   }
 };
 
-// TODO - setup router for this
-// @desc      Get reviews
-// @route     GET /api/v1/courses/:courseId/reviews
-// @access    Public
-exports.getReviewsOfCourse = async (req, res, next) => {
-  try {
-    const reviews = await Review.find({ course: req.params.courseId }).sort({ rating: 'desc' }).populate({
-      path: 'user',
-      select: 'firstName lastName email avatar',
-    });
-    return res.status(200).json({
-      success: true,
-      count: reviews.length,
-      data: reviews,
-    });
-  } catch (err) {
-    next(new ErrorResponse('Failed to fetching Reviews. Please try again'));
-  }
-};
-
 // @desc      Get a review
 // @route     GET /api/v1/reviews/:id
 // @access    Public
-exports.createReview = async (req, res, next) => {
+exports.getReview = async (req, res, next) => {
   try {
     const review = await Review.findById(req.params.id).populate('user').populate('course');
 
@@ -138,7 +118,7 @@ exports.createReview = async (req, res, next) => {
 
 // @desc      Delete a review
 // @route     DELETE /api/v1/reviews/:id
-// @access    Private
+// @access    Private /Student+Admin
 exports.deleteReview = async (req, res, next) => {
   try {
     const review = await Review.findById(req.params.id);
