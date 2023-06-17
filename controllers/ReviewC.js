@@ -5,14 +5,14 @@ const ErrorResponse = require('../utils/ErrorResponse');
 
 // @desc      Get reviews
 // @route     GET /api/v1/reviews
-// @access    Public
+// @access    Public // VERIFIED
 exports.getAllReviews = async (req, res, next) => {
   try {
     const reviews = await Review.find({})
       .sort({ rating: 'desc' })
       .populate({
         path: 'user',
-        select: 'firstName lastName email image',
+        select: 'firstName lastName email avatar',
       })
       .populate({
         path: 'course',
@@ -32,7 +32,7 @@ exports.getAllReviews = async (req, res, next) => {
 
 // @desc      Get a review
 // @route     GET /api/v1/reviews/:id
-// @access    Public
+// @access    Public // VERIFIED
 exports.getReview = async (req, res, next) => {
   try {
     const review = await Review.findById(req.params.id).populate('user').populate('course');
@@ -52,19 +52,19 @@ exports.getReview = async (req, res, next) => {
 
 // @desc      Create Review
 // @route     POST /api/v1/reviews
-// @access    Private /Student
+// @access    Private /Student // VERIFIED
 exports.createReview = async (req, res, next) => {
   try {
     const { review, rating, courseId } = req.body;
     const userId = req.user.id;
     if (!(review && rating && courseId)) {
-      next(new ErrorResponse('Some fields are missing', 404));
+      return next(new ErrorResponse('Some fields are missing', 404));
     }
 
     // Check if user is enrolled or not
     const course = await Course.findOne({
       _id: courseId,
-      studentsEnrolled: { $eleMatch: { $eq: userId } },
+      studentsEnrolled: { $elemMatch: { $eq: userId } },
     });
 
     if (!course) {
@@ -112,16 +112,18 @@ exports.createReview = async (req, res, next) => {
       data: reviewDetails,
     });
   } catch (err) {
+    console.log(err);
     next(new ErrorResponse('Failed to create Review. Please try again', 500));
   }
 };
 
 // @desc      Delete a review
 // @route     DELETE /api/v1/reviews/:id
-// @access    Private /Student+Admin
+// @access    Private /Student+Admin // VERIFIED
 exports.deleteReview = async (req, res, next) => {
   try {
     const review = await Review.findById(req.params.id);
+    console.log(review);
     if (!review) {
       return next(new ErrorResponse('No such review found', 404));
     }
@@ -147,6 +149,8 @@ exports.deleteReview = async (req, res, next) => {
       },
       { new: true }
     );
+
+    await review.deleteOne();
 
     res.status(200).json({
       success: true,

@@ -30,6 +30,7 @@ const reviewSchema = new mongoose.Schema({
 });
 
 reviewSchema.statics.getAverageRating = async function (courseId) {
+  console.log(this);
   try {
     const obj = await this.aggregate([
       {
@@ -56,12 +57,11 @@ reviewSchema.statics.getAverageRating = async function (courseId) {
 };
 
 reviewSchema.post('save', async function (doc) {
-  // TODO : testing
+  console.log(this);
   await this.constructor.getAverageRating(this.course);
 });
 
 reviewSchema.post('deleteOne', { document: true, query: false }, async function (next) {
-  // TODO : testing and why
   await this.constructor.getAverageRating(this.course);
 });
 

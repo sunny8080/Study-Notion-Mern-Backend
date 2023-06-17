@@ -164,3 +164,35 @@ exports.createCourse = async (req, res, next) => {
     next(new ErrorResponse('Failed to create course', 500));
   }
 };
+
+// TODO - verify working
+// @desc      Create Course
+// @route     PUT /api/v1/courses/publishcourse/:courseId
+// @access    Private/instructor
+exports.publishCourse = async (req, res, next) => {
+  try {
+    let course = await Course.findById(req.params.courseId);
+    if (!course) {
+      return next(new ErrorResponse('No such course found', 404));
+    }
+
+    if (course.instructor.toString() !== req.user.id) {
+      return next(new ErrorResponse('User not authorized', 403));
+    }
+
+    course = await Course.findByIdAndUpdate(
+      course._id,
+      {
+        status: 'Published',
+      },
+      { new: true }
+    );
+
+    res.status(201).json({
+      success: true,
+      data: course,
+    });
+  } catch (err) {
+    next(new ErrorResponse('Failed to publish course', 500));
+  }
+};

@@ -52,7 +52,6 @@ const userSchema = new mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Course',
-        // default: [], // TODO - check for default
       },
     ],
     courseProgress: [

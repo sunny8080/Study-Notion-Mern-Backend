@@ -86,55 +86,59 @@ exports.verifySignature = async (req, res, next) => {
     }
 
     // Fulfill the action
-    // Find the course and enroll the student in it
     const { courseId, userId } = req.body.payload.payment.entity.notes;
-
-    if (!(courseId && !userId)) {
-      return next(new ErrorResponse('Invalid request', 404));
-    }
-
-    // update course
-    // TODO - post middleware for change no of student enrolled
-    const enrolledCourse = await Course.findOneAndUpdate(
-      { _id: courseId },
-      {
-        $push: { studentsEnrolled: userId },
-      },
-      { new: true }
-    );
-
-    if (!enrolledCourse) {
-      return next(new ErrorResponse('Course not found', 404));
-    }
-
-    // update student - enroll the student
-    const enrolledUser = await User.findOneAndUpdate(
-      { _id: userId },
-      {
-        $push: { courses: courseId },
-      },
-      { new: true }
-    );
-
-    if (!enrolledUser) {
-      return next(new ErrorResponse('User not found', 404));
-    }
-
-    // Send course enrollment mail to user
-    try {
-      const emailResponse = await emailSender(enrolledUser.email, 'Congratulations for buying new course from StudyNotion', courseEnrollmentEmailTemplate(enrolledCourse.title, enrolledUser.firstName));
-
-      res.status(200).json({
-        success: true,
-        data: 'Course added to user',
-      });
-    } catch (err) {
-      res.status(200).json({
-        success: true,
-        data: 'Course added to user, but failed to send course enrollment email',
-      });
-    }
+    addCourse(res, courseId, userId);
   } catch (err) {
     next(new ErrorResponse('Failed to verify signature', 500));
+  }
+};
+
+// Add a course to Student courses array
+const addCourse = async (res, courseId, userId) => {
+  // Find the course and enroll the student in it
+  if (!(courseId && !userId)) {
+    return next(new ErrorResponse('Invalid request', 404));
+  }
+
+  // update course
+  const enrolledCourse = await Course.findOneAndUpdate(
+    { _id: courseId },
+    {
+      $push: { studentsEnrolled: userId },
+      $inc: { numberOfEnrolledStudents: 1 },
+    },
+    { new: true }
+  );
+
+  if (!enrolledCourse) {
+    return next(new ErrorResponse('Course not found', 404));
+  }
+
+  // update student - enroll the student
+  const enrolledUser = await User.findOneAndUpdate(
+    { _id: userId },
+    {
+      $push: { courses: courseId },
+    },
+    { new: true }
+  );
+
+  if (!enrolledUser) {
+    return next(new ErrorResponse('User not found', 404));
+  }
+
+  // Send course enrollment mail to user
+  try {
+    const emailResponse = await emailSender(enrolledUser.email, 'Congratulations for buying new course from StudyNotion', courseEnrollmentEmailTemplate(enrolledCourse.title, enrolledUser.firstName));
+
+    res.status(200).json({
+      success: true,
+      data: 'Course added to user',
+    });
+  } catch (err) {
+    res.status(200).json({
+      success: true,
+      data: 'Course added to user, but failed to send course enrollment email',
+    });
   }
 };
