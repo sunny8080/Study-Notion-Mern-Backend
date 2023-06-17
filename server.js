@@ -9,20 +9,26 @@ const connectDB = require('./config/database');
 const clgDev = require('./utils/clgDev');
 const errorHandler = require('./middlewares/errorHandler');
 const path = require('path');
+const cloudinaryConnect = require('./config/cloudinaryConnect');
 
 dotenv.config({ path: './config/config.env' });
 const PORT = process.env.PORT || 4000;
 const app = express();
 connectDB();
+cloudinaryConnect();
 
 // Dev logging middleware
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-app.use(errorHandler);
 app.use(express.json());
-app.use(fileUpload());
+app.use(
+  fileUpload({
+    useTempFiles: true,
+    tempFileDir: '/tmp/',
+  })
+);
 app.use(cookieParser());
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -45,8 +51,10 @@ app.use('/api/v1/payments', PaymentR);
 app.use('/api/v1/profiles', ProfileR);
 app.use('/api/v1/reviews', ReviewR);
 app.use('/api/v1/sections', SectionR);
-app.use('/api/v1/subsection', SubSectionR);
+app.use('/api/v1/subsections', SubSectionR);
 app.use('/api/v1/users', UserR);
+
+app.use(errorHandler); // must be after mounting the routes
 
 app.get('/', (req, res) => {
   res.send('Hello ji');

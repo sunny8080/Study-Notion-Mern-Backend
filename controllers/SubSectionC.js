@@ -6,7 +6,7 @@ const cloudUploader = require('../utils/cloudUploader');
 
 // @desc      Create a subsection
 // @route     POST /api/v1/subsections
-// @access    Private/instructor
+// @access    Private/instructor // VERIFIED
 exports.createSubSection = async (req, res, next) => {
   try {
     const { title, timeDuration, description, section } = req.body;
@@ -19,8 +19,13 @@ exports.createSubSection = async (req, res, next) => {
     const video = req.files.file;
 
     // check section is present or not
-    if (!(await Section.findById(section))) {
+    let sectionDetails = await Section.findById(section);
+    if (!sectionDetails) {
       return next(new ErrorResponse('No such section found', 404));
+    }
+
+    if (sectionDetails.user.toString() !== userId) {
+      return next(new ErrorResponse('User not authorized', 403));
     }
 
     // upload video
@@ -53,7 +58,7 @@ exports.createSubSection = async (req, res, next) => {
     });
 
     // update section
-    await Section.findByIdAndUpdate(
+    sectionDetails = await Section.findByIdAndUpdate(
       section,
       {
         $push: { subSections: subSection._id },
@@ -72,10 +77,10 @@ exports.createSubSection = async (req, res, next) => {
 
 // @desc      Update a subsection
 // @route     PUT /api/v1/subsections/:id
-// @access    Private/instructor
+// @access    Private/instructor // VERIFIED
 exports.updateSubSection = async (req, res, next) => {
   try {
-    const subSection = await SubSection.findById(req.params.id);
+    let subSection = await SubSection.findById(req.params.id);
 
     if (!subSection) {
       return next(new ErrorResponse('No such subsection found', 404));
@@ -89,8 +94,7 @@ exports.updateSubSection = async (req, res, next) => {
     const { title, timeDuration, description } = req.body;
     // TODO - we can provide features to update video
 
-    // TODO - What will happen if title is undefined
-    subSection = await Section.findByIdAndUpdate(
+    subSection = await SubSection.findByIdAndUpdate(
       subSection._id,
       {
         title,
@@ -99,8 +103,6 @@ exports.updateSubSection = async (req, res, next) => {
       },
       { new: true }
     );
-
-    // TODO - can we do it by subSection.save()
 
     res.status(200).json({
       success: true,
@@ -113,7 +115,7 @@ exports.updateSubSection = async (req, res, next) => {
 
 // @desc      Delete a subsection
 // @route     DELETE /api/v1/subsections/:id
-// @access    Private/instructor
+// @access    Private/instructor // VERIFIED
 exports.deleteSubSection = async (req, res, next) => {
   try {
     const subSection = await SubSection.findById(req.params.id);

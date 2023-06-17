@@ -1,10 +1,11 @@
 const Category = require('../models/Category');
 const Course = require('../models/Course');
 const ErrorResponse = require('../utils/ErrorResponse');
+const clgDev = require('../utils/clgDev');
 
 // @desc      Get all categories
 // @route     GET /api/v1/categories
-// @access    Public
+// @access    Public // VERIFIED
 exports.getAllCategories = async (req, res, next) => {
   try {
     const categories = await Category.find({}, { name: true, description: true });
@@ -20,7 +21,7 @@ exports.getAllCategories = async (req, res, next) => {
 
 // @desc      Get all courses of a category [+ other courses + top 10 selling courses]
 // @route     GET /api/v1/categories/:categoryId/courses
-// @access    Public
+// @access    Public // VERIFIED
 exports.getAllCategoryCourses = async (req, res, next) => {
   try {
     // Get request category courses
@@ -60,7 +61,7 @@ exports.getAllCategoryCourses = async (req, res, next) => {
 
 // @desc      Create a category
 // @route     POST /api/v1/categories
-// @access    Private/Admin
+// @access    Private/Admin // VERIFIED
 exports.createCategory = async (req, res, next) => {
   try {
     const { name, description } = req.body;

@@ -3,23 +3,23 @@ const mongoose = require('mongoose');
 const profileSchema = new mongoose.Schema({
   gender: {
     type: String,
-    enum:["Male", "Female", "Others"],
-    default: null // TODO - check for null default
+    enum: ['male', 'female', 'others', null],
+    default: null,
   },
   dob: {
     type: Date,
-    default: null
+    default: null,
   },
   about: {
     type: String,
     trim: true,
-    default: null
+    default: null,
   },
   contactNumber: {
     type: String,
+    minLength: [10, 'Please provide a valid 10 digit phone number'],
     trim: true,
-    default: null
-  }
+  },
 });
 
 module.exports = mongoose.model('Profile', profileSchema);

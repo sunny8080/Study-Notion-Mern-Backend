@@ -11,7 +11,7 @@ const cryptos = require('crypto');
 // TODO - All payments related routes, controllers are not sure, it will done in later time
 
 // @desc      Capture the payment and create the Razorpay order
-// @route     POST /api/v1/payments/capturePayment
+// @route     POST /api/v1/payments/capturepayment
 // @access    Private/Student
 exports.capturePayment = async (req, res, next) => {
   try {
@@ -66,7 +66,7 @@ exports.capturePayment = async (req, res, next) => {
 };
 
 // @desc      Verify signature of Razorpay and server
-// @route     POST /api/v1/payments/verifySignature
+// @route     POST /api/v1/payments/verifysignature
 // @access    Private/Student
 exports.verifySignature = async (req, res, next) => {
   try {

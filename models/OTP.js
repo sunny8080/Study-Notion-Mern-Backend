@@ -22,17 +22,14 @@ const OTPSchema = new mongoose.Schema({
 const sendOtpEmail = async (toEmail, otp) => {
   try {
     const mailResponse = await emailSender(toEmail, 'Verification Email from StudyNotion', emailOtpTemplate(otp));
-
-    clgDev(`Email sent successfully : ${mailResponse.response}`);
   } catch (err) {
     clgDev(`Error occurred while sending otp : ${err.message}`);
     throw err;
   }
 };
 
-// Send otp after OTP is created // TODO
+// Send otp after OTP is created
 OTPSchema.post('save', async function (doc) {
-  clgDev(this); // TODO
   // Only send an email when a new document is created
   // this.isNew in pre middleware
   await sendOtpEmail(this.email, this.otp);

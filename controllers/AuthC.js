@@ -7,10 +7,14 @@ const otpGenerator = require('otp-generator');
 const emailSender = require('../utils/emailSender');
 const passwordUpdateTemplate = require('../mail/templates/passwordUpdateTemplate');
 const crypto = require('crypto');
+const clgDev = require('../utils/clgDev');
+const jwt = require('jsonwebtoken');
+const accountCreationTemplate = require('../mail/templates/accountCreationTemplate');
+const adminCreatedTemplate = require('../mail/templates/adminCreatedTemplate');
 
 // @desc      Send OTP for email verification
 // @route     POST /api/v1/auth/sendotp
-// @access    Public
+// @access    Public // VERIFIED
 exports.sendOtp = async (req, res, next) => {
   try {
     const { email } = req.body;
@@ -48,7 +52,7 @@ exports.sendOtp = async (req, res, next) => {
 
 // @desc      SignUp a user
 // @route     POST /api/v1/auth/signup
-// @access    Public
+// @access    Public // VERIFIED
 exports.signup = async (req, res, next) => {
   try {
     const { firstName, lastName, email, password, role, contactNumber, otp } = req.body;
@@ -57,18 +61,17 @@ exports.signup = async (req, res, next) => {
       return next(new ErrorResponse('Some fields are missing', 403));
     }
 
-    // check if user already exists
-    if (await User.findOne({ email })) {
-      return next(new ErrorResponse('User already exist. Please sign to continue', 400));
-    }
-
-    // TODO - verify it
     // Find the most recent OTP for the email
     const recentOtp = await OTP.find({ email }).sort({ createdAt: -1 }).limit(1);
 
     if (recentOtp.length === 0 || otp !== recentOtp[0].otp) {
       // OTP not found or Database Otp not match with given otp for this email'
       return next(new ErrorResponse('OTP is not valid. Please try again.', 400));
+    }
+
+    // check if user already exists
+    if (await User.findOne({ email })) {
+      return next(new ErrorResponse('User already exist. Please sign in to continue', 400));
     }
 
     // check if role is not admin
@@ -95,6 +98,9 @@ exports.signup = async (req, res, next) => {
       avatar: `https://api.dicebear.com/5.x/initials/svg?seed=${firstName}%20${lastName}`,
     });
 
+    // send a notification to user for account creation
+    emailSender(email, `Account created successfully for ${firstName} ${lastName}`, accountCreationTemplate(firstName + ' ' + lastName));
+
     sendTokenResponse(res, user, 201);
   } catch (err) {
     next(new ErrorResponse('Failed to signUp user. Please try again', 500));
@@ -103,7 +109,7 @@ exports.signup = async (req, res, next) => {
 
 // @desc      Login user
 // @route     POST /api/v1/auth/login
-// @access    Public
+// @access    Public  // VERIFIED
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -130,7 +136,7 @@ exports.login = async (req, res, next) => {
 
 // @desc      Logout current user / cleat cookie
 // @route     POST /api/v1/auth/logout
-// @access    Private
+// @access    Private  // VERIFIED
 exports.logOut = async (req, res, next) => {
   try {
     res
@@ -150,7 +156,7 @@ exports.logOut = async (req, res, next) => {
 
 // @desc      Get current logged in user
 // @route     GET /api/v1/auth/getme
-// @access    Private
+// @access    Private  // VERIFIED
 exports.getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
@@ -165,7 +171,7 @@ exports.getMe = async (req, res, next) => {
 
 // @desc      Change Password
 // @route     PUT /api/v1/auth/changepassword
-// @access    Private
+// @access    Private  // VERIFIED
 exports.changePassword = async (req, res, next) => {
   try {
     let user = await User.findById(req.user.id).select('+password');
@@ -196,7 +202,7 @@ exports.changePassword = async (req, res, next) => {
 
 // @desc      Forgot Password - send rest url to user
 // @route     POST /api/v1/auth/forgotpassword
-// @access    Public
+// @access    Public  // VERIFIED
 exports.forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
@@ -209,7 +215,7 @@ exports.forgotPassword = async (req, res, next) => {
     const resetToken = crypto.randomBytes(20).toString('hex');
     const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
 
-    user = await User.findByIdAndUpdate(
+    user = await User.findOneAndUpdate(
       { email },
       {
         resetPasswordToken: hashedToken,
@@ -243,7 +249,7 @@ exports.forgotPassword = async (req, res, next) => {
 
 // @desc      Reset Password
 // @route     PUT /api/v1/auth/resetpassword
-// @access    Public
+// @access    Public  // VERIFIED
 exports.resetPassword = async (req, res, next) => {
   try {
     const { password, resettoken } = req.body;
@@ -296,22 +302,55 @@ exports.resetPassword = async (req, res, next) => {
   }
 };
 
-// TODO
 // @desc      Create Admin
 // @route     POST /api/v1/auth/createadmin
-// @access    Private/SiteOwner
+// @access    Private/SiteOwner // VERIFIED
 exports.createAdmin = async (req, res, next) => {
   try {
+    const { firstName, lastName, email, password, contactNumber } = req.body;
+    const role = 'Admin';
+
+    if (!(firstName && lastName && email && password && role && contactNumber)) {
+      return next(new ErrorResponse('Some fields are missing', 403));
+    }
+
+    // check if user already exists
+    if (await User.findOne({ email })) {
+      return next(new ErrorResponse('User already exist. Please sign in to continue', 400));
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // LATER  - what is approved
+    let approved = role === 'Instructor' ? false : true;
+
+    const profile = await Profile.create({ contactNumber });
+
+    const user = await User.create({
+      firstName,
+      lastName,
+      email,
+      password: hashedPassword,
+      role,
+      approved,
+      profile: profile._id,
+      avatar: `https://api.dicebear.com/5.x/initials/svg?seed=${firstName}%20${lastName}`,
+    });
+
+    // send a notification to user for account creation
+    emailSender(email, `Admin account created successfully for ${firstName} ${lastName}`, adminCreatedTemplate(firstName + ' ' + lastName));
+
     res.status(400).json({
       success: false,
-      error: 'sadf',
+      data: 'Admin created successfully',
     });
   } catch (err) {
     next(new ErrorResponse('Failed to create admin, Please try again', 500));
   }
 };
 
-// Function to send token in cookies
+// Function to send token in cookies  // VERIFIED
 const sendTokenResponse = (res, user, statusCode) => {
   const token = jwt.sign(
     {
@@ -324,7 +363,7 @@ const sendTokenResponse = (res, user, statusCode) => {
   );
 
   const options = {
-    expires: new Date(Date.now() + process.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000),
+    expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000),
     httpOnly: true,
   };
 

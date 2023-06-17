@@ -3,11 +3,22 @@ const clgDev = require('./clgDev');
 
 const emailSender = async (toEmail, subject, body) => {
   try {
+    // For real purpose // TODO
+    // const transporter = nodemailer.createTransport({
+    //   host: process.env.MAIL_HOST,
+    //   auth: {
+    //     user: process.env.MAIL_USER,
+    //     pass: process.env.MAIL_PASS,
+    //   },
+    // });
+
+    // For testing
     const transporter = nodemailer.createTransport({
-      host: process.env.MAIL_HOST,
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
       auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
+        user: process.env.SMTP_EMAIL,
+        pass: process.env.SMTP_PASSWORD,
       },
     });
 
@@ -16,7 +27,7 @@ const emailSender = async (toEmail, subject, body) => {
       from: `${process.env.FROM_NAME} <${process.env.FROM_EMAIL}>`,
       to: toEmail,
       subject: subject,
-      html: `${body}`,
+      html: body,
     });
 
     return info;

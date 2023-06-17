@@ -2,15 +2,15 @@ const User = require('../models/User');
 const Profile = require('../models/Profile');
 const ErrorResponse = require('../utils/ErrorResponse');
 const cloudUploader = require('../utils/cloudUploader');
+const clgDev = require('../utils/clgDev');
 
-// TODO : populate
 // @desc      Get all users
 // @route     GET /api/v1/users
-// @access    Private/Admin
+// @access    Private/Admin // VERIFIED
 exports.getUsers = async (req, res, next) => {
   try {
-    const users = await User.find({}).populate('profile').populate(courses).exec();
-    req.status(200).json({
+    const users = await User.find({}).populate('profile').populate('courses').exec();
+    res.status(200).json({
       success: true,
       count: users.length,
       data: users,
@@ -21,27 +21,32 @@ exports.getUsers = async (req, res, next) => {
 };
 
 // @desc      Get single user by id
-// @route     GET /api/v1/users/:id
-// @access    Private/Admin
+// @route     GET /api/v1/users/getuser/:id
+// @access    Private/Admin // VERIFIED
 exports.getUser = async (req, res, next) => {
   try {
-    const user = await User.findById(id).populate('profile').populate('courses').exec();
-    req.status(200).json({
+    const user = await User.findById(req.params.id).populate('profile').populate('courses').exec();
+
+    if(!user){
+      return next(new ErrorResponse('No such user found', 404));
+    }
+
+    res.status(200).json({
       success: true,
       data: user,
     });
   } catch (err) {
-    next(new ErrorResponse('Failed to get user, please try again', 50));
+    next(new ErrorResponse('Failed to get user, please try again', 500));
   }
 };
 
 // @desc      Get current user
 // @route     GET /api/v1/users/currentuser
-// @access    Private
+// @access    Private // VERIFIED
 exports.currentUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id).populate('profile').populate('courses').exec();
-    req.status(200).json({
+    res.status(200).json({
       success: true,
       data: user,
     });
@@ -52,7 +57,7 @@ exports.currentUser = async (req, res, next) => {
 
 // @desc      Change avatar of user
 // @route     PUT /api/v1/users/changeavatar
-// @access    Private
+// @access    Private // VERIFIED
 exports.changeAvatar = async (req, res, next) => {
   try {
     if (!(req.files && req.files.file)) {
@@ -78,14 +83,15 @@ exports.changeAvatar = async (req, res, next) => {
     }
 
     avatar.name = `avatar_${req.user.id}_${Date.now()}.${avatarType}`;
-    const img = await cloudUploader(avatar, process.env.AVATAR_FOLDER_NAME, 1000, 50);
-    const user = await User.findByIdAndUpdate(req.user.id, { image: img.secure_url }, { new: true });
+    const img = await cloudUploader(avatar, process.env.AVATAR_FOLDER_NAME, 100, 80);
+    const user = await User.findByIdAndUpdate(req.user.id, { avatar: img.secure_url }, { new: true });
 
     res.status(200).json({
       success: true,
       data: img.secure_url,
     });
   } catch (err) {
+    console.log(err);
     next(new ErrorResponse('Failed to update profile pic', 404));
   }
 };
@@ -99,7 +105,7 @@ exports.getEnrolledCourses = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      count: user.courses.count,
+      count: user.courses.length,
       data: user.courses,
     });
   } catch (err) {
@@ -109,14 +115,14 @@ exports.getEnrolledCourses = async (req, res, next) => {
 
 // @desc      Get all courses created by current instructor
 // @route     GET /api/v1/users/getcreatedcourses
-// @access    Private/Instructor
+// @access    Private/Instructor // VERIFIED
 exports.getCreatedCourses = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id).populate('courses').exec();
 
     res.status(200).json({
       success: true,
-      count: user.courses.count,
+      count: user.courses.length,
       data: user.courses,
     });
   } catch (err) {
@@ -133,7 +139,7 @@ exports.getAllReviews = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      count: user.reviews.count,
+      count: user.reviews.length,
       data: user.reviews,
     });
   } catch (err) {

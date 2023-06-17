@@ -6,7 +6,7 @@ const { protect, authorize, isSiteOwner } = require('../middlewares/auth');
 const { getUsers, getUser, currentUser, changeAvatar, getEnrolledCourses, getCreatedCourses, getAllReviews, deleteCurrentUser } = require('../controllers/UserC');
 
 router.get('/', protect, authorize('Admin'), getUsers);
-router.get('/:id', protect, authorize('Admin'), getUser);
+router.get('/getuser/:id', protect, authorize('Admin'), getUser);
 router.get('/currentuser', protect, currentUser);
 router.put('/changeavatar', protect, changeAvatar);
 router.get('/getenrolledcourses', protect, authorize('Student'), getEnrolledCourses);

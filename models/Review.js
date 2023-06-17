@@ -45,7 +45,7 @@ reviewSchema.statics.getAverageRating = async function (courseId) {
 
     try {
       await this.model('Course').findByIdAndUpdate(courseId, {
-        averageRating: obj.length ? Math.round(obj[0].averageRating*10)/10: 0,
+        averageRating: obj.length ? Math.round(obj[0].averageRating * 10) / 10 : 0,
       });
     } catch (err) {
       throw err;
@@ -64,4 +64,5 @@ reviewSchema.post('deleteOne', { document: true, query: false }, async function 
   // TODO : testing and why
   await this.constructor.getAverageRating(this.course);
 });
+
 module.exports = mongoose.model('Review', reviewSchema);

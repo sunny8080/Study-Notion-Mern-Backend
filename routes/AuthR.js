@@ -13,6 +13,6 @@ router.get('/getme', protect, getMe);
 router.put('/changepassword', protect, changePassword);
 router.post('/forgotpassword', forgotPassword);
 router.put('/resetpassword', resetPassword);
-router.put('/createadmin', isSiteOwner,createAdmin);
+router.post('/createadmin', protect, isSiteOwner, createAdmin);
 
 module.exports = router;

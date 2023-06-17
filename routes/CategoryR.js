@@ -7,6 +7,6 @@ const { getAllCategories, getAllCategoryCourses, createCategory } = require('../
 
 router.get('/', getAllCategories);
 router.get('/:categoryId/courses', getAllCategoryCourses);
-router.post('/', authorize('Admin'), createCategory);
+router.post('/', protect, authorize('Admin'), createCategory);
 
 module.exports = router;

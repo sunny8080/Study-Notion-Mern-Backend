@@ -24,11 +24,10 @@ exports.getAllPublishedCourses = async (req, res, next) => {
 
 // @desc      Get single courses
 // @route     GET /api/v1/courses/:id
-// @access    Public
+// @access    Public // VERIFIED
 exports.getCourse = async (req, res, next) => {
   try {
-    // TODO - verify double populate
-    const course = await Course.findById(id)
+    const course = await Course.findById(req.params.id)
       .populate({
         path: 'instructor',
         populate: {
@@ -38,7 +37,7 @@ exports.getCourse = async (req, res, next) => {
       .populate('category')
       .populate('reviews')
       .populate({
-        path: 'section',
+        path: 'sections',
         populate: {
           path: 'subSection',
         },
@@ -63,15 +62,13 @@ exports.getCourse = async (req, res, next) => {
 // @access    Public
 exports.getReviewsOfCourse = async (req, res, next) => {
   try {
-    const course = await Course.findById(req.params.courseId)
-      .populate({
-        path: 'reviews', // TODO - verify
-        populate: {
-          path: 'user',
-          select: 'firstName lastName email avatar',
-        },
-      })
-      .populate('course');
+    const course = await Course.findById(req.params.courseId).populate({
+      path: 'reviews',
+      populate: {
+        path: 'user',
+        select: 'firstName lastName email avatar',
+      },
+    });
 
     if (!course) {
       return next(new ErrorResponse('No such course found', 404));
@@ -87,6 +84,7 @@ exports.getReviewsOfCourse = async (req, res, next) => {
   }
 };
 
+// TODO - deal with array of tags, whatYouWillLearn, and instructions
 // @desc      Create Course
 // @route     POST /api/v1/courses
 // @access    Private/instructor
@@ -95,15 +93,16 @@ exports.createCourse = async (req, res, next) => {
     const instructorId = req.user.id;
     const { title, description, whatYouWillLearn, price, category, instructions } = req.body;
 
-    const thumbnail = req.files.file;
-    const tags = req.body.tags.split(',');
-
-    if (!(title && description && whatYouWillLearn && instructorId && price && tags && thumbnail && category)) {
+    if (!(title && description && whatYouWillLearn && instructorId && price && category && instructions && req.files && req.files.file && req.body.tags)) {
       return next(new ErrorResponse('All fields are mandatory', 404));
     }
 
+    const thumbnail = req.files.file;
+    const tags = req.body.tags.split(', ');
+
     // check if category is a valid category
-    if (!(await Category.findById(category))) {
+    const categoryDetails = await Category.findOne({ name: category });
+    if (!categoryDetails) {
       return next(new ErrorResponse('No such category found', 404));
     }
 
@@ -124,7 +123,7 @@ exports.createCourse = async (req, res, next) => {
     }
 
     thumbnail.name = `thumbnail_${instructorId}_${Date.now()}`;
-    const image = await cloudUploader(thumbnail, process.env.THUMBNAIL_FOLDER_NAME, 1000, 80);
+    const image = await cloudUploader(thumbnail, process.env.THUMBNAIL_FOLDER_NAME, 200, 80);
 
     // create course
     const courseDetails = await Course.create({
@@ -133,7 +132,7 @@ exports.createCourse = async (req, res, next) => {
       instructor: instructorId,
       whatYouWillLearn,
       price,
-      category,
+      category: categoryDetails._id,
       instructions,
       thumbnail: image.secure_url,
       tags,
@@ -150,7 +149,7 @@ exports.createCourse = async (req, res, next) => {
 
     // update category
     await Category.findByIdAndUpdate(
-      category,
+      categoryDetails._id,
       {
         $push: { courses: courseDetails._id },
       },
