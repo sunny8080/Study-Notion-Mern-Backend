@@ -55,9 +55,11 @@ exports.sendOtp = async (req, res, next) => {
 // @access    Public // VERIFIED
 exports.signup = async (req, res, next) => {
   try {
-    const { firstName, lastName, email, password, role, contactNumber, otp } = req.body;
+    let { firstName, lastName, email, password, role, contactNumber, otp } = req.body;
 
-    if (!(firstName && lastName && email && password && role && contactNumber && otp)) {
+    role = role.charAt(0).toUpperCase() + role.slice(1);
+
+    if (!(firstName && lastName && email && password && role && otp)) {
       return next(new ErrorResponse('Some fields are missing', 403));
     }
 
@@ -85,7 +87,7 @@ exports.signup = async (req, res, next) => {
     // LATER  - what is approved
     let approved = role === 'Instructor' ? false : true;
 
-    const profile = await Profile.create({ contactNumber });
+    const profile = await Profile.create({});
 
     const user = await User.create({
       firstName,
@@ -224,7 +226,7 @@ exports.forgotPassword = async (req, res, next) => {
       { new: true }
     );
 
-    const resetUrl = `${process.env.STUDY_NOTION_FRONTEND_SITE}/resetpassword/${resetToken}`;
+    const resetUrl = `${process.env.STUDY_NOTION_FRONTEND_SITE}/reset-password?reset-token=${resetToken}`;
 
     try {
       const response = emailSender(
@@ -252,13 +254,13 @@ exports.forgotPassword = async (req, res, next) => {
 // @access    Public  // VERIFIED
 exports.resetPassword = async (req, res, next) => {
   try {
-    const { password, resettoken } = req.body;
-    if (!(password && resettoken)) {
+    const { password, resetToken } = req.body;
+    if (!(password && resetToken)) {
       return next(new ErrorResponse('Some fields are missing', 404));
     }
 
     // Get hashed token
-    const resetPasswordToken = crypto.createHash('sha256').update(resettoken).digest('hex');
+    const resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
 
     let user = await User.findOne({
       resetPasswordToken,
@@ -373,6 +375,7 @@ const sendTokenResponse = (res, user, statusCode) => {
 
   res.cookie('token', token, options).status(statusCode).json({
     success: true,
+    user,
     token,
   });
 };

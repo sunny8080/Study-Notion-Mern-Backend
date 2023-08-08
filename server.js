@@ -43,6 +43,7 @@ const ReviewR = require('./routes/ReviewR');
 const SectionR = require('./routes/SectionR');
 const SubSectionR = require('./routes/SubSectionR');
 const UserR = require('./routes/UserR');
+const OtherR = require('./routes/OtherR');
 
 app.use('/api/v1/auth', AuthR);
 app.use('/api/v1/categories', CategoryR);
@@ -53,6 +54,7 @@ app.use('/api/v1/reviews', ReviewR);
 app.use('/api/v1/sections', SectionR);
 app.use('/api/v1/subsections', SubSectionR);
 app.use('/api/v1/users', UserR);
+app.use('/api/v1/other', OtherR);
 
 app.use(errorHandler); // must be after mounting the routes
 
