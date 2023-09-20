@@ -6,10 +6,11 @@ const subSectionSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  // timeDuration will be in seconds
   timeDuration: {
     type: String,
     required: true,
-    trim: true,
+    default: '0'
   },
   description: {
     type: String,

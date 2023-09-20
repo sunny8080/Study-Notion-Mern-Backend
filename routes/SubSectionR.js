@@ -6,7 +6,7 @@ const { protect, authorize, isSiteOwner } = require('../middlewares/auth');
 const { createSubSection, updateSubSection, deleteSubSection } = require('../controllers/SubSectionC');
 
 router.post('/', protect, authorize('Instructor'), createSubSection);
-router.put('/:id', protect, authorize('Instructor'), updateSubSection);
-router.delete('/:id', protect, authorize('Instructor'), deleteSubSection);
+router.put('/', protect, authorize('Instructor'), updateSubSection);
+router.delete('/', protect, authorize('Instructor'), deleteSubSection);
 
 module.exports = router;

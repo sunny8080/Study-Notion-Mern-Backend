@@ -53,6 +53,12 @@ const courseSchema = new mongoose.Schema({
       ref: 'Section',
     },
   ],
+  // timeDuration will be in seconds
+  totalDuration: {
+    type: Number,
+    required: true,
+    default: 0
+  },
   reviews: [
     {
       type: mongoose.Schema.Types.ObjectId,

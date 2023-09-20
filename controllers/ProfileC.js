@@ -7,7 +7,7 @@ const ErrorResponse = require('../utils/ErrorResponse');
 // @access    Private
 exports.updateProfile = async (req, res, next) => {
   try {
-    const { gender, dob, about, contactNumber } = req.body;
+    const { gender, dob, about, contactNumber, firstName, lastName } = req.body;
     const user = await User.findById(req.user.id);
 
     // TODO - Convert date from string to Date
@@ -25,9 +25,21 @@ exports.updateProfile = async (req, res, next) => {
       }
     );
 
+    const updateUser = await User.findByIdAndUpdate(
+      user.id,
+      {
+        firstName,
+        lastName
+      },
+      {
+        runValidators: true,
+        new: true,
+      }
+    );
+
     res.status(200).json({
       success: true,
-      data: profile,
+      data: updateUser,
     });
   } catch (err) {
     console.log(err);

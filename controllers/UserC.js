@@ -3,6 +3,8 @@ const Profile = require('../models/Profile');
 const ErrorResponse = require('../utils/ErrorResponse');
 const cloudUploader = require('../utils/cloudUploader');
 const clgDev = require('../utils/clgDev');
+const secToDuration = require('../utils/secToDuration');
+const CourseProgress = require('../models/CourseProgress');
 
 // @desc      Get all users
 // @route     GET /api/v1/users
@@ -27,7 +29,7 @@ exports.getUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id).populate('profile').populate('courses').exec();
 
-    if(!user){
+    if (!user) {
       return next(new ErrorResponse('No such user found', 404));
     }
 
@@ -101,7 +103,41 @@ exports.changeAvatar = async (req, res, next) => {
 // @access    Private/Student
 exports.getEnrolledCourses = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id).populate('courses').exec();
+    let user = await User.findById(req.user.id).populate({
+      path: 'courses',
+      populate: {
+        path: 'sections',
+        populate: {
+          path: 'subSections'
+        }
+      }
+    }).exec();
+
+    user = user.toObject();
+
+    // set totalDuration of each  course
+    for (let i = 0; i < user.courses.length; i++) {
+      let totalDurationInSeconds = parseInt(user.courses[i].totalDuration);
+      user.courses[i].duration = secToDuration(totalDurationInSeconds);
+
+      let subsectionCount = 0;
+      for (let j = 0; j < user.courses[i].sections.length; j++) {
+        subsectionCount += user.courses[i].sections[j].subSections.length;
+      }
+
+      const courseProgress = await CourseProgress.findOne({
+        courseId: user.courses[i]._id,
+        userId: user._id
+      });
+
+      const courseProgressCount = courseProgress.completedVideos.length;
+      let progressPercentage = 100;
+      if (subsectionCount !== 0) {
+        progressPercentage = Math.round((courseProgressCount / subsectionCount) * 100 * 100) / 100;
+      }
+
+      user.courses[i].progressPercentage = progressPercentage;
+    }
 
     res.status(200).json({
       success: true,
@@ -109,13 +145,14 @@ exports.getEnrolledCourses = async (req, res, next) => {
       data: user.courses,
     });
   } catch (err) {
+    console.log(err)
     next(new ErrorResponse('Failed to fetch all courses', 500));
   }
 };
 
 // @desc      Get all courses created by current instructor
 // @route     GET /api/v1/users/getcreatedcourses
-// @access    Private/Instructor // VERIFIED
+// @access    Private/Instructor // TODO
 exports.getCreatedCourses = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id).populate('courses').exec();

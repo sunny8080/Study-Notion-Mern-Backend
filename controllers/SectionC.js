@@ -8,13 +8,13 @@ const clgDev = require('../utils/clgDev');
 // @access    Private/instructor  // VERIFIED
 exports.createSection = async (req, res, next) => {
   try {
-    const { title, course } = req.body;
+    const { title, courseId } = req.body;
 
-    if (!(title && course)) {
+    if (!(title && courseId)) {
       return next(new ErrorResponse('Some fields are missing', 404));
     }
 
-    const courseDetails = await Course.findById(course);
+    const courseDetails = await Course.findById(courseId);
     if (!courseDetails) {
       return next(new ErrorResponse('No such course found', 404));
     }
@@ -24,20 +24,33 @@ exports.createSection = async (req, res, next) => {
       return next(new ErrorResponse('User not authorized', 404));
     }
 
-    const section = await Section.create({ title, course, user: req.user.id });
+    const section = await Section.create({
+      title,
+      course: courseDetails._id,
+      user: req.user.id
+    });
 
     // update course
-    await Course.findByIdAndUpdate(
-      course,
+    const updatedCourse = await Course.findByIdAndUpdate(
+      courseId,
       {
         $push: { sections: section._id },
       },
       { new: true }
-    ).exec();
+    ).populate('category')
+      .populate('reviews')
+      .populate({
+        path: 'sections',
+        populate: {
+          path: 'subSections'
+        },
+      })
+      .exec();
 
+    // return the updated course
     res.status(201).json({
       success: true,
-      data: section,
+      data: updatedCourse,
     });
   } catch (err) {
     next(new ErrorResponse('Failed to create section. Please try again', 500));
@@ -45,34 +58,53 @@ exports.createSection = async (req, res, next) => {
 };
 
 // @desc      Update a section
-// @route     PUT /api/v1/sections/:id
-// @access    Private/instructor // VERIFIED
+// @route     PUT /api/v1/sections
+// @access    Private/instructor 
 exports.updateSection = async (req, res, next) => {
   try {
-    let section = await Section.findById(req.params.id);
+    const instructorId = req.user.id;
+    const { sectionId, title } = req.body;
 
+    if (!(sectionId && title)) {
+      return next(new ErrorResponse('Some fields are missing', 404));
+    }
+
+    const section = await Section.findById(sectionId);
     if (!section) {
       return next(new ErrorResponse('No such section found', 404));
     }
 
     // only section creator (instructor) can update section
-    if (section.user.toString() !== req.user.id) {
-      return next(new ErrorResponse('User not authorized to do this task', 404));
+    if (section.user.toString() !== instructorId) {
+      return next(new ErrorResponse('Unauthorized access', 401));
     }
 
-    const { title } = req.body;
-    section = await Section.findByIdAndUpdate(
-      req.params.id,
+
+    const updatedSection = await Section.findByIdAndUpdate(
+      sectionId,
       { title },
       {
-        // runValidators: true,
+        runValidators: true,
         new: true,
       }
     );
 
+
+    const updatedCourse = await Course.findByIdAndUpdate(
+      section.course,
+    ).populate('category')
+      .populate('reviews')
+      .populate({
+        path: 'sections',
+        populate: {
+          path: 'subSections'
+        },
+      })
+      .exec();
+
     res.status(200).json({
       success: true,
-      data: section,
+      data: updatedCourse,
     });
   } catch (err) {
     next(new ErrorResponse('Failed to update section. Please try again', 500));
@@ -80,14 +112,25 @@ exports.updateSection = async (req, res, next) => {
 };
 
 // @desc      Delete a section
-// @route     DELETE /api/v1/sections/:id
-// @access    Private/instructor // VERIFIED
+// @route     DELETE /api/v1/sections
+// @access    Private/instructor 
 exports.deleteSection = async (req, res, next) => {
   try {
-    let section = await Section.findById(req.params.id);
+    const instructorId = req.user.id;
+    const { sectionId } = req.body;
 
+    if (!sectionId) {
+      return next(new ErrorResponse('Some fields are missing', 404));
+    }
+
+    const section = await Section.findById(sectionId);
     if (!section) {
       return next(new ErrorResponse('No such section found', 404));
+    }
+
+    // only section creator (instructor) can update section
+    if (section.user.toString() !== instructorId) {
+      return next(new ErrorResponse('Unauthorized access', 401));
     }
 
     if (section.user.toString() !== req.user.id) {
@@ -95,20 +138,28 @@ exports.deleteSection = async (req, res, next) => {
     }
 
     // update course
-    await Course.findByIdAndUpdate(
+    const updatedCourse = await Course.findByIdAndUpdate(
       section.course,
       {
         $pull: { sections: section._id },
       },
       { new: true }
-    );
+    ).populate('category')
+      .populate('reviews')
+      .populate({
+        path: 'sections',
+        populate: {
+          path: 'subSections'
+        },
+      })
+      .exec();
 
-    // await Section.findByIdAndDelete(req.params.id);
+    // await Section.findByIdAndDelete(sectionId);
     await section.deleteOne();
 
     res.status(200).json({
       success: true,
-      data: section,
+      data: updatedCourse,
     });
   } catch (err) {
     next(new ErrorResponse('Failed to delete section. Please try again', 500));

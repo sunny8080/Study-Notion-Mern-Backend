@@ -7,6 +7,7 @@ const courseEnrollmentEmailTemplate = require('../mail/templates/courseEnrollmen
 const mongoose = require('mongoose');
 const razorpayInstance = require('../config/razorpay');
 const cryptos = require('crypto');
+const CourseProgress = require('../models/CourseProgress');
 
 // TODO - All payments related routes, controllers are not sure, it will done in later time
 
@@ -93,10 +94,11 @@ exports.verifySignature = async (req, res, next) => {
   }
 };
 
+
 // Add a course to Student courses array
 const addCourse = async (res, courseId, userId) => {
   // Find the course and enroll the student in it
-  if (!(courseId && !userId)) {
+  if (!(courseId && userId)) {
     return next(new ErrorResponse('Invalid request', 404));
   }
 
@@ -126,6 +128,77 @@ const addCourse = async (res, courseId, userId) => {
   if (!enrolledUser) {
     return next(new ErrorResponse('User not found', 404));
   }
+
+  // Create a courseProgress 
+  const courseProgress = await CourseProgress.create({
+    courseId,
+    userId
+  })
+
+  // Send course enrollment mail to user
+  try {
+    const emailResponse = await emailSender(enrolledUser.email, 'Congratulations for buying new course from StudyNotion', courseEnrollmentEmailTemplate(enrolledCourse.title, enrolledUser.firstName));
+
+    res.status(200).json({
+      success: true,
+      data: 'Course added to user',
+    });
+  } catch (err) {
+    res.status(200).json({
+      success: true,
+      data: 'Course added to user, but failed to send course enrollment email',
+    });
+  }
+};
+
+
+
+
+
+// TODO - remove it
+// @desc      Add a course to Student courses array
+// @route     POST /api/v1/payments/adddirectcourse
+// @access    Private/Student
+exports.addDirectCourse = async (req, res, next) => {
+  const { courseId, userId } = req.body;
+
+  // Find the course and enroll the student in it
+  if (!(courseId && userId)) {
+    return next(new ErrorResponse('Invalid request', 404));
+  }
+
+  // update course
+  const enrolledCourse = await Course.findOneAndUpdate(
+    { _id: courseId },
+    {
+      $push: { studentsEnrolled: userId },
+      $inc: { numberOfEnrolledStudents: 1 },
+    },
+    { new: true }
+  );
+
+  if (!enrolledCourse) {
+    return next(new ErrorResponse('Course not found', 404));
+  }
+
+  // update student - enroll the student
+  const enrolledUser = await User.findOneAndUpdate(
+    { _id: userId },
+    {
+      $push: { courses: courseId },
+    },
+    { new: true }
+  );
+
+  if (!enrolledUser) {
+    return next(new ErrorResponse('User not found', 404));
+  }
+
+  // Create a courseProgress 
+  const courseProgress = await CourseProgress.create({
+    courseId,
+    userId
+  })
 
   // Send course enrollment mail to user
   try {

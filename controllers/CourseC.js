@@ -10,7 +10,7 @@ const ErrorResponse = require('../utils/ErrorResponse');
 // @access    Public
 exports.getAllPublishedCourses = async (req, res, next) => {
   try {
-    const courses = await Course.find({ status: 'Published' }).populate('instructor').exec();
+    const courses = await Course.find({ status: 'Published' }).populate('instructor').populate('category').exec();
 
     return res.status(200).json({
       success: true,
@@ -23,7 +23,7 @@ exports.getAllPublishedCourses = async (req, res, next) => {
 };
 
 // @desc      Get single courses
-// @route     GET /api/v1/courses/:id
+// @route     GET /api/v1/courses/getcourse/:id
 // @access    Public // VERIFIED
 exports.getCourse = async (req, res, next) => {
   try {
@@ -39,7 +39,8 @@ exports.getCourse = async (req, res, next) => {
       .populate({
         path: 'sections',
         populate: {
-          path: 'subSection',
+          path: 'subSections',
+          select: "-videoUrl"
         },
       })
       .exec();
@@ -53,6 +54,60 @@ exports.getCourse = async (req, res, next) => {
       data: course,
     });
   } catch (err) {
+    console.log(err);
+    next(new ErrorResponse('Failed to fetching course', 500));
+  }
+};
+
+
+// @desc      Get full details of a course
+// @route     POST /api/v1/courses/getFullCourseDetails
+// @access    Private
+exports.getFullCourseDetails = async (req, res, next) => {
+  try {
+    // TODO - implement this
+    // Full details can be seen by instructor who created it and student who bought it
+    const instructorId = req.user.id;
+
+    const { courseId } = req.body;
+
+    if (!courseId) {
+      return next(new Error("Invalid request", 404));
+    }
+
+    const course = await Course.findById(courseId)
+      .populate({
+        path: 'instructor',
+        populate: {
+          path: 'profile',
+        },
+      })
+      .populate('category')
+      .populate('reviews')
+      .populate({
+        path: 'sections',
+        populate: {
+          path: 'subSections'
+        },
+      })
+      .exec();
+
+    if (!course) {
+      return next(new ErrorResponse('No such course found', 404));
+    }
+
+
+    // TODO - implement as said above
+    if (course.instructor._id.toString() !== instructorId) {
+      return next(new ErrorResponse('Unauthorized access', 401));
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: course,
+    });
+  } catch (err) {
+    console.log(err)
     next(new ErrorResponse('Failed to fetching course', 500));
   }
 };
@@ -91,22 +146,33 @@ exports.getReviewsOfCourse = async (req, res, next) => {
 exports.createCourse = async (req, res, next) => {
   try {
     const instructorId = req.user.id;
-    const { title, description, whatYouWillLearn, price, category, instructions } = req.body;
+    const { title, description, whatYouWillLearn, price, category } = req.body;
+    const tags = req.body?.tags ? JSON.parse(req.body?.tags) : null;
+    const instructions = req.body?.instructions ? JSON.parse(req.body?.instructions) : null;
+    const thumbnail = req.files?.thumbnail;
 
-    if (!(title && description && whatYouWillLearn && instructorId && price && category && instructions && req.files && req.files.file && req.body.tags)) {
+    if (!(
+      instructorId &&
+      title &&
+      description &&
+      whatYouWillLearn &&
+      price &&
+      category &&
+      tags &&
+      instructions &&
+      thumbnail
+    )) {
       return next(new ErrorResponse('All fields are mandatory', 404));
     }
 
-    const thumbnail = req.files.file;
-    const tags = req.body.tags.split(', ');
-
     // check if category is a valid category
-    const categoryDetails = await Category.findOne({ name: category });
+    const categoryDetails = await Category.findById(category);
     if (!categoryDetails) {
       return next(new ErrorResponse('No such category found', 404));
     }
 
-    // valid and upload thumbnail
+
+    // validate and upload thumbnail
     if (thumbnail.size > process.env.THUMBNAIL_MAX_SIZE) {
       return next(new ErrorResponse(`Please upload a image less than ${process.env.THUMBNAIL_MAX_SIZE / 1024} KB`, 400));
     }
@@ -115,7 +181,7 @@ exports.createCourse = async (req, res, next) => {
       return next(new ErrorResponse('Please upload a image file', 400));
     }
 
-    const allowedFileType = ['jpeg', 'jpg'];
+    const allowedFileType = ['jpeg', 'jpg', 'png'];
     const thumbnailType = thumbnail.mimetype.split('/')[1];
 
     if (!allowedFileType.includes(thumbnailType)) {
@@ -132,7 +198,7 @@ exports.createCourse = async (req, res, next) => {
       instructor: instructorId,
       whatYouWillLearn,
       price,
-      category: categoryDetails._id,
+      category,
       instructions,
       thumbnail: image.secure_url,
       tags,
@@ -156,9 +222,26 @@ exports.createCourse = async (req, res, next) => {
       { new: true }
     );
 
+    const courseFullDetails = await Course.findById(courseDetails._id)
+      .populate({
+        path: 'instructor',
+        populate: {
+          path: 'profile',
+        },
+      })
+      .populate('category')
+      .populate('reviews')
+      .populate({
+        path: 'sections',
+        populate: {
+          path: 'subSections'
+        },
+      })
+      .exec()
+
     res.status(201).json({
       success: true,
-      data: courseDetails,
+      data: courseFullDetails,
     });
   } catch (err) {
     next(new ErrorResponse('Failed to create course', 500));
@@ -196,3 +279,101 @@ exports.publishCourse = async (req, res, next) => {
     next(new ErrorResponse('Failed to publish course', 500));
   }
 };
+
+
+
+// @desc      Edit Course
+// @route     PUT /api/v1/courses/editcourse
+// @access    Private/instructor
+exports.editCourse = async (req, res, next) => {
+  try {
+    // TODO - implement this
+    // Full details can be seen only by instructor who created it and student who bought it
+    const instructorId = req.user.id;
+
+    const { courseId } = req.body;
+    const updates = req.body;
+    console.log(updates)
+    console.log("00000")
+    const thumbnail = req.files?.thumbnail;
+
+    if (updates.hasOwnProperty("thumbnail") && !thumbnail) {
+      return next(new Error("Please select a thumbnail", 404));
+    }
+
+    if (!courseId) {
+      return next(new Error("Invalid request", 404));
+    }
+
+    const course = await Course.findById(courseId);
+
+    if (!course) {
+      return next(new ErrorResponse('No such course found', 404));
+    }
+
+    // TODO - implement as said above
+    if (course.instructor._id.toString() !== instructorId) {
+      return next(new ErrorResponse('Unauthorized access', 401));
+    }
+
+    /////////////////////// ** Course Thumbnail ** ///////////////////////
+    if (thumbnail) {
+      // validate and upload thumbnail
+      if (thumbnail.size > process.env.THUMBNAIL_MAX_SIZE) {
+        return next(new ErrorResponse(`Please upload a image less than ${process.env.THUMBNAIL_MAX_SIZE / 1024} KB`, 400));
+      }
+
+      if (!thumbnail.mimetype.startsWith('image')) {
+        return next(new ErrorResponse('Please upload a image file', 400));
+      }
+
+      const allowedFileType = ['jpeg', 'jpg'];
+      const thumbnailType = thumbnail.mimetype.split('/')[1];
+
+      if (!allowedFileType.includes(thumbnailType)) {
+        return next(new ErrorResponse('Please upload a valid image file', 400));
+      }
+
+      thumbnail.name = `thumbnail_${instructorId}_${Date.now()}`;
+      const image = await cloudUploader(thumbnail, process.env.THUMBNAIL_FOLDER_NAME, 200, 80);
+      course.thumbnail = image.secure_url;
+    }
+    /////////////////////////// ***** ///////////////////////////
+
+    if (updates.tags) updates.tags = JSON.parse(updates.tags);
+    if (updates.instructions) updates.instructions = JSON.parse(updates.instructions);
+
+    // Update only properties that are present in the request body (and not inherited in updates)
+    for (const key in updates) {
+      if (updates.hasOwnProperty(key)) {
+        course[key] = updates[key];
+      }
+    }
+
+    await course.save();
+
+    const updatedCourse = await Course.findById(courseId)
+      .populate({
+        path: 'instructor',
+        populate: {
+          path: 'profile',
+        },
+      })
+      .populate('category')
+      .populate('reviews')
+      .populate({
+        path: 'sections',
+        populate: {
+          path: 'subSections'
+        },
+      })
+      .exec();
+
+    return res.status(200).json({
+      success: true,
+      data: updatedCourse,
+    });
+  } catch (err) {
+    next(new ErrorResponse('Failed to edit course', 500));
+  }
+}
