@@ -152,7 +152,7 @@ exports.getEnrolledCourses = async (req, res, next) => {
 
 // @desc      Get all courses created by current instructor
 // @route     GET /api/v1/users/getcreatedcourses
-// @access    Private/Instructor // TODO
+// @access    Private/Instructor 
 exports.getCreatedCourses = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id).populate('courses').exec();

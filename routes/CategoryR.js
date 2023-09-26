@@ -6,7 +6,7 @@ const { protect, authorize, isSiteOwner } = require('../middlewares/auth');
 const { getAllCategories, getAllCategoryCourses, createCategory } = require('../controllers/CategoryC');
 
 router.get('/', getAllCategories);
-router.get('/:categoryId/courses', getAllCategoryCourses);
+router.post('/getcategorycourses', getAllCategoryCourses);
 router.post('/', protect, authorize('Admin'), createCategory);
 
 module.exports = router;

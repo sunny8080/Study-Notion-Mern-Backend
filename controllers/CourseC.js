@@ -4,6 +4,8 @@ const User = require('../models/User');
 const cloudUploader = require('../utils/cloudUploader');
 const clgDev = require('../utils/clgDev');
 const ErrorResponse = require('../utils/ErrorResponse');
+const Section = require('../models/Section');
+const SubSection = require('../models/SubSection');
 
 // @desc      Get all published courses
 // @route     GET /api/v1/courses
@@ -22,12 +24,12 @@ exports.getAllPublishedCourses = async (req, res, next) => {
   }
 };
 
-// @desc      Get single courses
-// @route     GET /api/v1/courses/getcourse/:id
+// @desc      Get single courses (Only published course)
+// @route     GET /api/v1/courses/getcourse/:courseId
 // @access    Public // VERIFIED
 exports.getCourse = async (req, res, next) => {
   try {
-    const course = await Course.findById(req.params.id)
+    const course = await Course.findById(req.params.courseId)
       .populate({
         path: 'instructor',
         populate: {
@@ -40,12 +42,12 @@ exports.getCourse = async (req, res, next) => {
         path: 'sections',
         populate: {
           path: 'subSections',
-          select: "-videoUrl"
+          select: '-videoUrl',
         },
       })
       .exec();
 
-    if (!course) {
+    if (!course || course.status === 'Draft') {
       return next(new ErrorResponse('No such course found', 404));
     }
 
@@ -59,7 +61,6 @@ exports.getCourse = async (req, res, next) => {
   }
 };
 
-
 // @desc      Get full details of a course
 // @route     POST /api/v1/courses/getFullCourseDetails
 // @access    Private
@@ -72,7 +73,7 @@ exports.getFullCourseDetails = async (req, res, next) => {
     const { courseId } = req.body;
 
     if (!courseId) {
-      return next(new Error("Invalid request", 404));
+      return next(new Error('Invalid request', 404));
     }
 
     const course = await Course.findById(courseId)
@@ -87,7 +88,7 @@ exports.getFullCourseDetails = async (req, res, next) => {
       .populate({
         path: 'sections',
         populate: {
-          path: 'subSections'
+          path: 'subSections',
         },
       })
       .exec();
@@ -95,7 +96,6 @@ exports.getFullCourseDetails = async (req, res, next) => {
     if (!course) {
       return next(new ErrorResponse('No such course found', 404));
     }
-
 
     // TODO - implement as said above
     if (course.instructor._id.toString() !== instructorId) {
@@ -107,7 +107,7 @@ exports.getFullCourseDetails = async (req, res, next) => {
       data: course,
     });
   } catch (err) {
-    console.log(err)
+    console.log(err);
     next(new ErrorResponse('Failed to fetching course', 500));
   }
 };
@@ -139,7 +139,6 @@ exports.getReviewsOfCourse = async (req, res, next) => {
   }
 };
 
-// TODO - deal with array of tags, whatYouWillLearn, and instructions
 // @desc      Create Course
 // @route     POST /api/v1/courses
 // @access    Private/instructor
@@ -151,17 +150,7 @@ exports.createCourse = async (req, res, next) => {
     const instructions = req.body?.instructions ? JSON.parse(req.body?.instructions) : null;
     const thumbnail = req.files?.thumbnail;
 
-    if (!(
-      instructorId &&
-      title &&
-      description &&
-      whatYouWillLearn &&
-      price &&
-      category &&
-      tags &&
-      instructions &&
-      thumbnail
-    )) {
+    if (!(instructorId && title && description && whatYouWillLearn && price && category && tags && instructions && thumbnail)) {
       return next(new ErrorResponse('All fields are mandatory', 404));
     }
 
@@ -170,7 +159,6 @@ exports.createCourse = async (req, res, next) => {
     if (!categoryDetails) {
       return next(new ErrorResponse('No such category found', 404));
     }
-
 
     // validate and upload thumbnail
     if (thumbnail.size > process.env.THUMBNAIL_MAX_SIZE) {
@@ -234,10 +222,10 @@ exports.createCourse = async (req, res, next) => {
       .populate({
         path: 'sections',
         populate: {
-          path: 'subSections'
+          path: 'subSections',
         },
       })
-      .exec()
+      .exec();
 
     res.status(201).json({
       success: true,
@@ -248,61 +236,23 @@ exports.createCourse = async (req, res, next) => {
   }
 };
 
-// TODO - verify working
-// @desc      Create Course
-// @route     PUT /api/v1/courses/publishcourse/:courseId
-// @access    Private/instructor
-exports.publishCourse = async (req, res, next) => {
-  try {
-    let course = await Course.findById(req.params.courseId);
-    if (!course) {
-      return next(new ErrorResponse('No such course found', 404));
-    }
-
-    if (course.instructor.toString() !== req.user.id) {
-      return next(new ErrorResponse('User not authorized', 403));
-    }
-
-    course = await Course.findByIdAndUpdate(
-      course._id,
-      {
-        status: 'Published',
-      },
-      { new: true }
-    );
-
-    res.status(201).json({
-      success: true,
-      data: course,
-    });
-  } catch (err) {
-    next(new ErrorResponse('Failed to publish course', 500));
-  }
-};
-
-
-
 // @desc      Edit Course
 // @route     PUT /api/v1/courses/editcourse
 // @access    Private/instructor
 exports.editCourse = async (req, res, next) => {
   try {
-    // TODO - implement this
-    // Full details can be seen only by instructor who created it and student who bought it
     const instructorId = req.user.id;
 
     const { courseId } = req.body;
     const updates = req.body;
-    console.log(updates)
-    console.log("00000")
     const thumbnail = req.files?.thumbnail;
 
-    if (updates.hasOwnProperty("thumbnail") && !thumbnail) {
-      return next(new Error("Please select a thumbnail", 404));
+    if (updates.hasOwnProperty('thumbnail') && !thumbnail) {
+      return next(new Error('Please select a thumbnail', 404));
     }
 
     if (!courseId) {
-      return next(new Error("Invalid request", 404));
+      return next(new Error('Invalid request', 404));
     }
 
     const course = await Course.findById(courseId);
@@ -311,7 +261,6 @@ exports.editCourse = async (req, res, next) => {
       return next(new ErrorResponse('No such course found', 404));
     }
 
-    // TODO - implement as said above
     if (course.instructor._id.toString() !== instructorId) {
       return next(new ErrorResponse('Unauthorized access', 401));
     }
@@ -364,7 +313,7 @@ exports.editCourse = async (req, res, next) => {
       .populate({
         path: 'sections',
         populate: {
-          path: 'subSections'
+          path: 'subSections',
         },
       })
       .exec();
@@ -376,4 +325,57 @@ exports.editCourse = async (req, res, next) => {
   } catch (err) {
     next(new ErrorResponse('Failed to edit course', 500));
   }
-}
+};
+
+// @desc      Delete Course - Course can be delete only if no students is enrolled
+// @route     DELETE /api/v1/courses/deletecourse
+// @access    Private/instructor
+exports.deleteCourse = async (req, res, next) => {
+  try {
+    const instructorId = req.user.id;
+    const { courseId } = req.body;
+
+    if (!courseId) {
+      return next(new Error('Invalid request', 404));
+    }
+
+    const course = await Course.findById(courseId);
+
+    if (!course) {
+      return next(new ErrorResponse('No such course found', 404));
+    }
+
+    if (course.instructor._id.toString() !== instructorId) {
+      return next(new ErrorResponse('Unauthorized access', 401));
+    }
+
+    if (course.studentsEnrolled.length !== 0) {
+      return next(new ErrorResponse("Can't delete course, some students are enrolled", 404));
+    }
+
+    // Delete sections and sub-sections
+    const courseSections = course.sections;
+    for (const sectionId of courseSections) {
+      const section = await Section.findById(sectionId);
+      const subSections = section.subSections;
+
+      // Delete the sub sections of section
+      for (const subSectionId of subSections) {
+        await SubSection.findByIdAndDelete(subSectionId);
+      }
+
+      // Delete the section
+      await Section.findByIdAndDelete(sectionId);
+    }
+
+    // Delete the course
+    await Course.findByIdAndDelete(courseId);
+
+    return res.status(200).json({
+      success: true,
+      data: course,
+    });
+  } catch (err) {
+    next(new ErrorResponse('Failed to delete course', 500));
+  }
+};
