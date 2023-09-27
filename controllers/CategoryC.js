@@ -66,7 +66,9 @@ exports.getAllCategoryCourses = async (req, res, next) => {
     });
 
     // Get top 10 selling courses
-    const topSellingCourses = await Course.find({})
+    const topSellingCourses = await Course.find({
+      status: 'Published',
+    })
       .sort({
         numberOfEnrolledStudents: 'desc',
       })
