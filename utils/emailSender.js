@@ -33,6 +33,7 @@ const emailSender = async (toEmail, subject, body) => {
     return info;
   } catch (err) {
     clgDev(err.message);
+    throw err;
   }
 };
 
