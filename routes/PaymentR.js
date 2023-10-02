@@ -3,10 +3,10 @@ const router = express.Router();
 const { protect, authorize, isSiteOwner } = require('../middlewares/auth');
 
 // import controllers
-const { capturePayment, verifySignature, addDirectCourse } = require('../controllers/PaymentC');
+const { createOrder, sendPaymentSuccess, verifyPaymentSignature } = require('../controllers/PaymentC');
 
-router.post('/capturepayment', protect, authorize('Student'), capturePayment);
-router.post('/verifysignature', protect, authorize('Student'), verifySignature);
-router.put('/adddirectcourse', protect, authorize('Student'), addDirectCourse);
+router.post('/createorder', protect, authorize('Student'), createOrder);
+router.post('/sendpaymentsuccess', protect, authorize('Student'), sendPaymentSuccess);
+router.put('/verifypaymentsignature', protect, authorize('Student'), verifyPaymentSignature);
 
 module.exports = router;
