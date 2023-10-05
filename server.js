@@ -36,6 +36,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Mount routes
 const AuthR = require('./routes/AuthR');
 const CategoryR = require('./routes/CategoryR');
+const CourseProgressR = require('./routes/CourseProgressR');
 const CourseR = require('./routes/CourseR');
 const PaymentR = require('./routes/PaymentR');
 const ProfileR = require('./routes/ProfileR');
@@ -55,6 +56,7 @@ app.use('/api/v1/sections', SectionR);
 app.use('/api/v1/subsections', SubSectionR);
 app.use('/api/v1/users', UserR);
 app.use('/api/v1/other', OtherR);
+app.use('/api/v1/courseprogress', CourseProgressR);
 
 app.use(errorHandler); // must be after mounting the routes
 

@@ -57,7 +57,6 @@ reviewSchema.statics.getAverageRating = async function (courseId) {
 };
 
 reviewSchema.post('save', async function (doc) {
-  console.log(this);
   await this.constructor.getAverageRating(this.course);
 });
 

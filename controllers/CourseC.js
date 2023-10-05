@@ -6,6 +6,7 @@ const clgDev = require('../utils/clgDev');
 const ErrorResponse = require('../utils/ErrorResponse');
 const Section = require('../models/Section');
 const SubSection = require('../models/SubSection');
+const CourseProgress = require('../models/CourseProgress');
 
 // @desc      Get all published courses
 // @route     GET /api/v1/courses
@@ -66,8 +67,7 @@ exports.getCourse = async (req, res, next) => {
 // @access    Private
 exports.getFullCourseDetails = async (req, res, next) => {
   try {
-    // TODO - implement this
-    // Full details can be seen by instructor who created it and student who bought it
+    // Full details can be seen by instructor who created it
     const instructorId = req.user.id;
 
     const { courseId } = req.body;
@@ -97,7 +97,6 @@ exports.getFullCourseDetails = async (req, res, next) => {
       return next(new ErrorResponse('No such course found', 404));
     }
 
-    // TODO - implement as said above
     if (course.instructor._id.toString() !== instructorId) {
       return next(new ErrorResponse('Unauthorized access', 401));
     }
@@ -112,32 +111,6 @@ exports.getFullCourseDetails = async (req, res, next) => {
   }
 };
 
-// @desc      Get all reviews of a course
-// @route     GET /api/v1/courses/:courseId/reviews
-// @access    Public
-exports.getReviewsOfCourse = async (req, res, next) => {
-  try {
-    const course = await Course.findById(req.params.courseId).populate({
-      path: 'reviews',
-      populate: {
-        path: 'user',
-        select: 'firstName lastName email avatar',
-      },
-    });
-
-    if (!course) {
-      return next(new ErrorResponse('No such course found', 404));
-    }
-
-    return res.status(200).json({
-      success: true,
-      count: course.reviews.length,
-      data: course.reviews,
-    });
-  } catch (err) {
-    next(new ErrorResponse('Failed to fetching Reviews. Please try again'));
-  }
-};
 
 // @desc      Create Course
 // @route     POST /api/v1/courses
@@ -377,5 +350,73 @@ exports.deleteCourse = async (req, res, next) => {
     });
   } catch (err) {
     next(new ErrorResponse('Failed to delete course', 500));
+  }
+};
+
+// @desc      Fetch course data, in which user is enrolled
+// @route     POST /api/v1/courses/getenrolledcoursedata
+// @access    Private/student
+exports.getEnrolledCourseData = async (req, res, next) => {
+  try {
+    // Only User who is enrolled in this course can get course data
+    const { courseId } = req.body;
+    const userId = req.user.id;
+
+    if (!courseId) {
+      return next(new Error('Invalid request', 404));
+    }
+
+    const course = await Course.findOne({
+      _id: courseId,
+      status: 'Published',
+    })
+      .populate({
+        path: 'instructor',
+        populate: {
+          path: 'profile',
+        },
+      })
+      .populate('category')
+      .populate('reviews')
+      .populate({
+        path: 'sections',
+        populate: {
+          path: 'subSections',
+        },
+      })
+      .exec();
+
+    if (!course) {
+      return next(new ErrorResponse('No such course found', 404));
+    }
+
+    if (!course.studentsEnrolled.includes(userId)) {
+      return next(new ErrorResponse('Student is not enrolled in Course', 401));
+    }
+
+    const courseProgress = await CourseProgress.findOne({
+      courseId,
+      userId,
+    });
+
+    if (!courseProgress) {
+      return next(new ErrorResponse('No such course progress found', 404));
+    }
+
+    let totalNoOfVideos = 0;
+    for (let section of course.sections) {
+      totalNoOfVideos += section.subSections.length;
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        course,
+        completedVideos: courseProgress.completedVideos,
+        totalNoOfVideos,
+      },
+    });
+  } catch (err) {
+    next(new ErrorResponse('Failed to fetch enrolled course data', 500));
   }
 };

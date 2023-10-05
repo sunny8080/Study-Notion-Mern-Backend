@@ -3,8 +3,8 @@ const Course = require('../models/Course');
 const User = require('../models/User');
 const ErrorResponse = require('../utils/ErrorResponse');
 
-// @desc      Get reviews
-// @route     GET /api/v1/reviews
+// @desc      Get all reviews
+// @route     GET /api/v1/reviews/getallreviews
 // @access    Public // VERIFIED
 exports.getAllReviews = async (req, res, next) => {
   try {
@@ -16,7 +16,7 @@ exports.getAllReviews = async (req, res, next) => {
       })
       .populate({
         path: 'course',
-        select: 'title',
+        select: 'title _id',
       })
       .exec();
 
@@ -31,11 +31,25 @@ exports.getAllReviews = async (req, res, next) => {
 };
 
 // @desc      Get a review
-// @route     GET /api/v1/reviews/:id
+// @route     POST /api/v1/reviews/getreview
 // @access    Public // VERIFIED
 exports.getReview = async (req, res, next) => {
   try {
-    const review = await Review.findById(req.params.id).populate('user').populate('course');
+    const { reviewId } = req.body;
+
+    if (!reviewId) {
+      return next(new ErrorResponse('Invalid request', 404));
+    }
+
+    const review = await Review.findById(reviewId)
+      .populate({
+        path: 'user',
+        select: 'firstName lastName email avatar',
+      })
+      .populate({
+        path: 'course',
+        select: 'title _id',
+      });
 
     if (!review) {
       return next(new ErrorResponse('No such review found', 404));
@@ -50,9 +64,43 @@ exports.getReview = async (req, res, next) => {
   }
 };
 
+
+// @desc      Get all reviews of a course
+// @route     POST /api/v1/reviews/getreviewsofcourse
+// @access    Public
+exports.getReviewsOfCourse = async (req, res, next) => {
+  try {
+    const { courseId } = req.body;
+    if (!courseId) {
+      return next(new ErrorResponse("Invalid request", 404));
+    }
+
+    const course = await Course.findById(courseId).populate({
+      path: 'reviews',
+      populate: {
+        path: 'user',
+        select: 'firstName lastName email avatar',
+      },
+    });
+
+    if (!course) {
+      return next(new ErrorResponse('No such course found', 404));
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: course.reviews.length,
+      data: course.reviews,
+    });
+  } catch (err) {
+    next(new ErrorResponse('Failed to fetching Reviews. Please try again', 500));
+  }
+};
+
+
 // @desc      Create Review
-// @route     POST /api/v1/reviews
-// @access    Private /Student // VERIFIED
+// @route     POST /api/v1/createreview
+// @access    Private/Student // VERIFIED
 exports.createReview = async (req, res, next) => {
   try {
     const { review, rating, courseId } = req.body;
@@ -62,12 +110,12 @@ exports.createReview = async (req, res, next) => {
     }
 
     // Check if user is enrolled or not
-    const course = await Course.findOne({
-      _id: courseId,
-      studentsEnrolled: { $elemMatch: { $eq: userId } },
-    });
-
+    const course = await Course.findById(courseId);
     if (!course) {
+      return next(new ErrorResponse('No such course found', 404));
+    }
+
+    if (!course.studentsEnrolled.includes(userId)) {
       return next(new ErrorResponse('Student is not enrolled in the course', 404));
     }
 
@@ -112,18 +160,21 @@ exports.createReview = async (req, res, next) => {
       data: reviewDetails,
     });
   } catch (err) {
-    console.log(err);
     next(new ErrorResponse('Failed to create Review. Please try again', 500));
   }
 };
 
 // @desc      Delete a review
-// @route     DELETE /api/v1/reviews/:id
-// @access    Private /Student+Admin // VERIFIED
+// @route     DELETE /api/v1/deletereview
+// @access    Private/Student+Admin // VERIFIED
 exports.deleteReview = async (req, res, next) => {
   try {
-    const review = await Review.findById(req.params.id);
-    console.log(review);
+    const reviewId = req.body;
+    if (!reviewId) {
+      return next(new ErrorResponse('Invalid request', 404));
+    }
+
+    const review = await Review.findById(reviewId);
     if (!review) {
       return next(new ErrorResponse('No such review found', 404));
     }
