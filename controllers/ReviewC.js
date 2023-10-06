@@ -67,7 +67,7 @@ exports.getReview = async (req, res, next) => {
 
 // @desc      Get all reviews of a course
 // @route     POST /api/v1/reviews/getreviewsofcourse
-// @access    Public
+// @access    Public // VERIFIED
 exports.getReviewsOfCourse = async (req, res, next) => {
   try {
     const { courseId } = req.body;
@@ -80,6 +80,12 @@ exports.getReviewsOfCourse = async (req, res, next) => {
       populate: {
         path: 'user',
         select: 'firstName lastName email avatar',
+      },
+    }).populate({
+      path: 'reviews',
+      populate: {
+        path: 'course',
+        select: 'title _id',
       },
     });
 
