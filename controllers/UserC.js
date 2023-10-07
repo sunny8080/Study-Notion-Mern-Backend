@@ -210,3 +210,55 @@ exports.deleteCurrentUser = async (req, res, next) => {
     next(new ErrorResponse('Failed to delete user, Please try again', 500));
   }
 };
+
+
+// TODO
+// @desc      Get Instructor Dashboard data of a Instructor
+// @route     GET /api/v1/users/getinstructordashboarddata
+// @access    Private/Instructor 
+exports.getInstructorDashboardData = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findById(userId).populate({
+      path: 'courses',
+      match: { status: 'Published' }
+    }).exec();
+
+    if (!user) {
+      return next(new ErrorResponse('No such user found', 404));
+    }
+
+    let totalPublishedCourses = user.courses.length;
+    let totalStudents = 0;
+    let totalIncome = 0;
+
+
+    const coursesWithStats = user.courses.map((course) => {
+      let courseWithStats = {
+        course,
+        stats: {
+          totalStudents: course.numberOfEnrolledStudents,
+          totalIncome: course.price * course.numberOfEnrolledStudents
+        }
+      }
+
+      totalStudents += courseWithStats.stats.totalStudents;
+      totalIncome += courseWithStats.stats.totalIncome;
+      return courseWithStats
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        userId: user._id,
+        userFirstName: user.firstName,
+        totalPublishedCourses,
+        totalStudents,
+        totalIncome,
+        coursesWithStats,
+      }
+    });
+  } catch (err) {
+    next(new ErrorResponse('Failed to get user, please try again', 500));
+  }
+};
