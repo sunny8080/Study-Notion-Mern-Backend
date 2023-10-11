@@ -4,11 +4,15 @@
 
 ## Links
 
-> Full Stack Website - [Click Here](https://github.com/sunny8080/Study-Notion-Mern)
-> Frontend - [Click Here](https://github.com/sunny8080/Study-Notion-Mern-Frontend/)
-> Backend - [Click Here](https://github.com/sunny8080/Study-Notion-Mern-Backend/)
-> Frontend Live at - [Click Here](https://study-notion-mern-sunny8080.netlify.app/)
-> Backend Live at - [Click Here](https://study-notion-mern-backend-sunny8080.onrender.com/)
+> #### Full Stack Website - [Click Here](https://github.com/sunny8080/Study-Notion-Mern)
+>
+> #### Frontend - [Click Here](https://github.com/sunny8080/Study-Notion-Mern-Frontend/)
+>
+> #### Backend - [Click Here](https://github.com/sunny8080/Study-Notion-Mern-Backend/)
+>
+> #### Frontend Live at - [Click Here](https://study-notion-mern-sunny8080.netlify.app/)
+>
+> #### Backend Live at - [Click Here](https://study-notion-mern-backend-sunny8080.onrender.com/)
 
 ## Usage
 
@@ -30,8 +34,9 @@ npm i
 
 #### 3. Rename "config/example.config.env" to "config/config.env" and set/update all the values/settings of your own
 
-`Rename => config/example.config.env -> config/config.env`
-`set all env vars`
+```
+mv config/example.config.env config/config.env`
+```
 
 #### 4. Run App (default - server will run on port 4000)
 
