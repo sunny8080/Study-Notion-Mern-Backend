@@ -18,11 +18,15 @@ This is used to perform any CRUD operation which is required in StudyNotion appl
 
 #### 1. Clone or extract this github repo in your local machine
 
-`git clone https://github.com/sunny8080/Study-Notion-Mern-Backend`
+```
+git clone https://github.com/sunny8080/Study-Notion-Mern-Backend
+```
 
 #### 2. Install dependencies
 
-`npm i`
+```
+npm i
+```
 
 #### 3. Rename "config/example.config.env" to "config/config.env" and set/update all the values/settings of your own
 
@@ -31,15 +35,19 @@ This is used to perform any CRUD operation which is required in StudyNotion appl
 
 #### 4. Run App (default - server will run on port 4000)
 
-```
-# Run in development mode
-npm run dev
+##### 4.1. Run in development mode
 
-# Run in production mode
+```
+npm run dev
+```
+
+##### 4.2. Run in production mode
+
+```
 npm start
 ```
 
-## Demo
+## Live at
 
 The API is live at - [https://study-notion-mern-backend-sunny8080.onrender.com/](https://study-notion-mern-backend-sunny8080.onrender.com/)
 
