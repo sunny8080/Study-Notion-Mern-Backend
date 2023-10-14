@@ -27,6 +27,7 @@ git clone https://github.com/sunny8080/Study-Notion-Mern-Backend backend
 ```
 
 #### 2. Move to backend directory
+
 ```
 cd backend
 ```
@@ -64,5 +65,5 @@ The API is live at - [https://study-notion-mern-backend-sunny8080.onrender.com/]
 Extensive documentation with examples - [Click Here](https://documenter.getpostman.com/view/19721099/2s9YJjSf9i)
 
 - Version - 1.0.0
-- License: Sunny8080
+- License: sunny8080
 - Author: Sunny Kumar
