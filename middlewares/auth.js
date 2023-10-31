@@ -33,6 +33,16 @@ exports.authorize = (...roles) => {
   };
 };
 
+
+exports.adminAuthorization = () => {
+  return (req, res, next) => {
+    if (req.user.email !== process.env.SITE_OWNER_EMAIL) {
+      return next(new ErrorResponse('User not authorized to access this route', 401));
+    }
+    next();
+  };
+}
+
 exports.isSiteOwner = (req, res, next) => {
   if (req.user.email !== process.env.SITE_OWNER_EMAIL) {
     next(new ErrorResponse('User not authorized to access this route', 401));
