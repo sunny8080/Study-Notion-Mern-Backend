@@ -12,7 +12,7 @@
 >
 > #### Frontend Live at - [Click Here](https://study-notion-mern-sunny8080.netlify.app)
 >
-> #### Backend Live at - [Click Here](http://study-notion-mern-backend.ap-south-1.elasticbeanstalk.com)
+> #### Backend Live at - [Click Here](https://study-notion-mern-backend-sunny8080.onrender.com)
 
 ## Usage
 
@@ -64,7 +64,7 @@ The API is live at ( on Render ) - [https://study-notion-mern-backend-sunny8080.
 
 >
 
-The API is live at ( on AWS ) - [http://study-notion-mern-backend.ap-south-1.elasticbeanstalk.com](http://study-notion-mern-backend.ap-south-1.elasticbeanstalk.com)
+The API is live at ( on AWS ) - [http://study-notion-mern-backend-sunny8080.ap-south-1.elasticbeanstalk.com](http://study-notion-mern-backend-sunny8080.ap-south-1.elasticbeanstalk.com)
 
 Extensive documentation with examples - [Click Here](https://documenter.getpostman.com/view/19721099/2s9YJjSf9i)
 
