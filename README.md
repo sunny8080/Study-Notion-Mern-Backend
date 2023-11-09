@@ -6,13 +6,13 @@
 
 > #### Full Stack Website - [Click Here](https://github.com/sunny8080/Study-Notion-Mern)
 >
-> #### Frontend - [Click Here](https://github.com/sunny8080/Study-Notion-Mern-Frontend/)
+> #### Frontend - [Click Here](https://github.com/sunny8080/Study-Notion-Mern-Frontend)
 >
-> #### Backend - [Click Here](https://github.com/sunny8080/Study-Notion-Mern-Backend/)
+> #### Backend - [Click Here](https://github.com/sunny8080/Study-Notion-Mern-Backend)
 >
-> #### Frontend Live at - [Click Here](https://study-notion-mern-sunny8080.netlify.app/)
+> #### Frontend Live at - [Click Here](https://study-notion-mern-sunny8080.netlify.app)
 >
-> #### Backend Live at - [Click Here](https://study-notion-mern-backend-sunny8080.onrender.com/)
+> #### Backend Live at - [Click Here](http://study-notion-mern-backend.ap-south-1.elasticbeanstalk.com)
 
 ## Usage
 
@@ -60,7 +60,10 @@ npm start
 
 ## Live at
 
-The API is live at ( on Render ) - [https://study-notion-mern-backend-sunny8080.onrender.com/](https://study-notion-mern-backend-sunny8080.onrender.com/)
+The API is live at ( on Render ) - [https://study-notion-mern-backend-sunny8080.onrender.com](https://study-notion-mern-backend-sunny8080.onrender.com)
+
+>
+
 The API is live at ( on AWS ) - [http://study-notion-mern-backend.ap-south-1.elasticbeanstalk.com](http://study-notion-mern-backend.ap-south-1.elasticbeanstalk.com)
 
 Extensive documentation with examples - [Click Here](https://documenter.getpostman.com/view/19721099/2s9YJjSf9i)
