@@ -60,7 +60,8 @@ npm start
 
 ## Live at
 
-The API is live at - [https://study-notion-mern-backend-sunny8080.onrender.com/](https://study-notion-mern-backend-sunny8080.onrender.com/)
+The API is live at ( on Render ) - [https://study-notion-mern-backend-sunny8080.onrender.com/](https://study-notion-mern-backend-sunny8080.onrender.com/)
+The API is live at ( on AWS ) - [http://study-notion-mern-backend.ap-south-1.elasticbeanstalk.com](http://study-notion-mern-backend.ap-south-1.elasticbeanstalk.com)
 
 Extensive documentation with examples - [Click Here](https://documenter.getpostman.com/view/19721099/2s9YJjSf9i)
 
