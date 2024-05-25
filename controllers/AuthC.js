@@ -101,7 +101,7 @@ exports.signup = async (req, res, next) => {
     });
 
     // send a notification to user for account creation
-    emailSender(email, `Account created successfully for ${firstName} ${lastName}`, accountCreationTemplate(firstName + ' ' + lastName));
+    await emailSender(email, `Account created successfully for ${firstName} ${lastName}`, accountCreationTemplate(firstName + ' ' + lastName));
 
     sendTokenResponse(res, user, 201);
   } catch (err) {
@@ -229,7 +229,7 @@ exports.forgotPassword = async (req, res, next) => {
     const resetUrl = `${process.env.STUDY_NOTION_FRONTEND_SITE}/reset-password?reset-token=${resetToken}`;
 
     try {
-      const response = emailSender(
+      const response = await emailSender(
         user.email,
         `Password reset for ${user.firstName} ${user.lastName}`,
         `You are receiving this email because you (or someone else) has requested the reset of your Study Notion account password. 
@@ -287,7 +287,7 @@ exports.resetPassword = async (req, res, next) => {
 
     // send mail to user for reset password
     try {
-      const response = emailSender(
+      const response = await emailSender(
         user.email,
         `Password has been reset successfully for ${user.firstName} ${user.lastName}`,
         `Your password has been reset successfully. Thanks for being with us.
@@ -341,11 +341,11 @@ exports.createAdmin = async (req, res, next) => {
     });
 
     // send a notification to user for account creation
-    emailSender(email, `Admin account created successfully for ${firstName} ${lastName}`, adminCreatedTemplate(firstName + ' ' + lastName));
+    await emailSender(email, `Admin account created successfully for ${firstName} ${lastName}`, adminCreatedTemplate(firstName + ' ' + lastName));
 
-    res.status(400).json({
-      success: false,
-      data: 'Admin created successfully',
+    res.status(201).json({
+      success: true,
+      data: 'Admin account created successfully',
     });
   } catch (err) {
     next(new ErrorResponse('Failed to create admin, Please try again', 500));
