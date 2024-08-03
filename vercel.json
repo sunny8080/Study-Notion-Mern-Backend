@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "name": "krishna-ayurvedic-api",
+  "name": "StudyNotion-Backend-api",
   "builds": [
     {
       "src": "./server.js",
