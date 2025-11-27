@@ -12,7 +12,7 @@
 >
 > #### Frontend Live at - [https://studynotionsunny8080.site](https://studynotionsunny8080.site)
 >
-> #### Backend Live at - [https://api.studynotionsunny8080.site](https://api.studynotionsunny8080.site/)
+> #### Backend Live at - [https://api.studynotionsunny8080.site](https://api.studynotionsunny8080.site)
 
 ## Usage
 
